@@ -16,7 +16,6 @@ public class StaffFeaturesPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         getLogger().info("StaffFeatures enabled!");
-
         saveDefaultConfig();
 
         // Start repeating task to update action bars every 2 seconds
@@ -32,7 +31,7 @@ public class StaffFeaturesPlugin extends JavaPlugin {
                     player.sendActionBar(Component.text(message));
                 }
             }
-        }, 0L, 40L); // 40 ticks = 2 seconds
+        }, 0L, 40L);
     }
 
     @Override
@@ -40,12 +39,18 @@ public class StaffFeaturesPlugin extends JavaPlugin {
         getLogger().info("StaffFeatures disabled!");
     }
 
-    // Handle commands
+    private void sendNoPermission(CommandSender sender) {
+        String prefix = getConfig().getString("messages.prefix");
+        String msg = getConfig().getString("messages.noPermission").replace("{prefix}", prefix);
+        sender.sendMessage(msg);
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+
         if (command.getName().equalsIgnoreCase("togglevanish")) {
             if (!sender.hasPermission("stafffeatures.toggle.vanish")) {
-                sender.sendMessage("§cYou don't have permission!");
+                sendNoPermission(sender);
                 return true;
             }
             vanished = !vanished;
@@ -57,7 +62,7 @@ public class StaffFeaturesPlugin extends JavaPlugin {
 
         if (command.getName().equalsIgnoreCase("togglestaffchat")) {
             if (!sender.hasPermission("stafffeatures.toggle.staffchat")) {
-                sender.sendMessage("§cYou don't have permission!");
+                sendNoPermission(sender);
                 return true;
             }
             staffChat = !staffChat;
@@ -69,7 +74,7 @@ public class StaffFeaturesPlugin extends JavaPlugin {
 
         if (command.getName().equalsIgnoreCase("togglefeature")) {
             if (!sender.hasPermission("stafffeatures.toggle.feature")) {
-                sender.sendMessage("§cYou don't have permission!");
+                sendNoPermission(sender);
                 return true;
             }
             someFeature = !someFeature;

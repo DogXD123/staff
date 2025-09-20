@@ -4,3 +4,5 @@ messages:
     togglestaffchat: "§bStaff Chat status: {status}"
     togglefeature: "§aFeature status: {status}"
   actionBarFormat: "§eVanished: {vanish} §7| §bStaff Chat: {staffchat} §7| §aFeature: {feature}"
+  noPermission: "§c{prefix} You don't have permission!"
+  prefix: "§e[Pixel Burma]"
