@@ -1,0 +1,6 @@
+messages:
+  helpMessage:
+    togglevanish: "§eUse /togglevanish to toggle Vanish."
+    togglestaffchat: "§bUse /togglestaffchat to toggle Staff Chat."
+    togglefeature: "§aUse /togglefeature to toggle the feature."
+  actionBarFormat: "§eVanished: {vanish} §7| §bStaff Chat: {staffchat} §7| §aFeature: {feature}"

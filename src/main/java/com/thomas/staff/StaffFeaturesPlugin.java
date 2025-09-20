@@ -2,6 +2,8 @@ package com.thomas.staff;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,45 +17,68 @@ public class StaffFeaturesPlugin extends JavaPlugin {
     public void onEnable() {
         getLogger().info("StaffFeatures enabled!");
 
-        // /togglevanish command
-        getCommand("togglevanish").setExecutor((sender, cmd, label, args) -> {
-            vanished = !vanished;
-            sender.sendMessage("§eVanished: " + (vanished ? "§aON" : "§cOFF"));
-            return true;
-        });
+        saveDefaultConfig();
 
-        // /togglestaffchat command
-        getCommand("togglestaffchat").setExecutor((sender, cmd, label, args) -> {
-            staffChat = !staffChat;
-            sender.sendMessage("§bStaff Chat: " + (staffChat ? "§aON" : "§cOFF"));
-            return true;
-        });
-
-        // /togglefeature command
-        getCommand("togglefeature").setExecutor((sender, cmd, label, args) -> {
-            someFeature = !someFeature;
-            sender.sendMessage("§aFeature: " + (someFeature ? "§aON" : "§cOFF"));
-            return true;
-        });
-
-        // Repeating task to update action bars
+        // Start repeating task to update action bars every 2 seconds
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 if (player.hasPermission("stafffeatures.use")) {
-                    String message = String.format(
-                            "§eVanished: %s §7| §bStaff Chat: %s §7| §aFeature: %s",
-                            vanished ? "§aON" : "§cOFF",
-                            staffChat ? "§aON" : "§cOFF",
-                            someFeature ? "§aON" : "§cOFF"
-                    );
+                    String format = getConfig().getString("messages.actionBarFormat");
+                    String message = format
+                            .replace("{vanish}", vanished ? "§aON" : "§cOFF")
+                            .replace("{staffchat}", staffChat ? "§aON" : "§cOFF")
+                            .replace("{feature}", someFeature ? "§aON" : "§cOFF");
+
                     player.sendActionBar(Component.text(message));
                 }
             }
-        }, 0L, 40L);
+        }, 0L, 40L); // 40 ticks = 2 seconds
     }
 
     @Override
     public void onDisable() {
         getLogger().info("StaffFeatures disabled!");
+    }
+
+    // Handle commands
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("togglevanish")) {
+            if (!sender.hasPermission("stafffeatures.toggle.vanish")) {
+                sender.sendMessage("§cYou don't have permission!");
+                return true;
+            }
+            vanished = !vanished;
+            String msg = getConfig().getString("messages.helpMessage.togglevanish")
+                    .replace("{status}", vanished ? "§aON" : "§cOFF");
+            sender.sendMessage(msg);
+            return true;
+        }
+
+        if (command.getName().equalsIgnoreCase("togglestaffchat")) {
+            if (!sender.hasPermission("stafffeatures.toggle.staffchat")) {
+                sender.sendMessage("§cYou don't have permission!");
+                return true;
+            }
+            staffChat = !staffChat;
+            String msg = getConfig().getString("messages.helpMessage.togglestaffchat")
+                    .replace("{status}", staffChat ? "§aON" : "§cOFF");
+            sender.sendMessage(msg);
+            return true;
+        }
+
+        if (command.getName().equalsIgnoreCase("togglefeature")) {
+            if (!sender.hasPermission("stafffeatures.toggle.feature")) {
+                sender.sendMessage("§cYou don't have permission!");
+                return true;
+            }
+            someFeature = !someFeature;
+            String msg = getConfig().getString("messages.helpMessage.togglefeature")
+                    .replace("{status}", someFeature ? "§aON" : "§cOFF");
+            sender.sendMessage(msg);
+            return true;
+        }
+
+        return false;
     }
 }
