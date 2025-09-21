@@ -2,39 +2,46 @@ package com.thomas.staff;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import com.thomas.staff.commands.ToggleVanishCommand;
+import com.thomas.staff.commands.ToggleStaffChatCommand;
+import com.thomas.staff.listeners.StaffChatListener;
 
-public class StaffFeaturesPlugin extends JavaPlugin implements Listener {
+public class StaffFeaturesPlugin extends JavaPlugin {
 
     private boolean vanished = false;
     private boolean staffChatEnabled = true;
 
+    // -----------------------------
+    // Getters & Toggle Methods
+    // -----------------------------
+    public boolean isVanished() {
+        return vanished;
+    }
+
+    public void toggleVanish() {
+        vanished = !vanished;
+    }
+
+    public boolean isStaffChatEnabled() {
+        return staffChatEnabled;
+    }
+
+    public void toggleStaffChat() {
+        staffChatEnabled = !staffChatEnabled;
+    }
+
+    // -----------------------------
+    // Plugin Lifecycle
+    // -----------------------------
     @Override
     public void onEnable() {
         getLogger().info("StaffFeatures enabled!");
         saveDefaultConfig();
 
-        Bukkit.getPluginManager().registerEvents(this, this);
-
-        // Start repeating task to update action bars every 2 seconds
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (player.hasPermission("stafffeatures.use")) {
-                    String format = getConfig().getString("messages.actionBarFormat");
-                    String message = format
-                            .replace("{vanish}", vanished ? "§aON" : "§cOFF")
-                            .replace("{staffchat}", staffChatEnabled ? "§aON" : "§cOFF");
-
-                    player.sendActionBar(Component.text(message));
-                }
-            }
-        }, 0L, 40L);
+        registerCommands();
+        registerListeners();
+        startActionBarUpdater();
     }
 
     @Override
@@ -42,57 +49,43 @@ public class StaffFeaturesPlugin extends JavaPlugin implements Listener {
         getLogger().info("StaffFeatures disabled!");
     }
 
-    private void sendNoPermission(CommandSender sender) {
-        String prefix = getConfig().getString("messages.prefix");
-        String msg = getConfig().getString("messages.noPermission").replace("{prefix}", prefix);
-        sender.sendMessage(msg);
+    // -----------------------------
+    // Config Helpers
+    // -----------------------------
+    public String getPrefix() {
+        return getConfig().getString("messages.prefix", "§7[StaffFeatures]");
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-
-        if (command.getName().equalsIgnoreCase("togglevanish")) {
-            if (!sender.hasPermission("stafffeatures.toggle.vanish")) {
-                sendNoPermission(sender);
-                return true;
-            }
-            vanished = !vanished;
-            String msg = getConfig().getString("messages.helpMessage.togglevanish")
-                    .replace("{status}", vanished ? "§aON" : "§cOFF");
-            sender.sendMessage(msg);
-            return true;
-        }
-
-        if (command.getName().equalsIgnoreCase("togglestaffchat")) {
-            if (!sender.hasPermission("stafffeatures.toggle.staffchat")) {
-                sendNoPermission(sender);
-                return true;
-            }
-            staffChatEnabled = !staffChatEnabled;
-            String msg = getConfig().getString("messages.helpMessage.togglestaffchat")
-                    .replace("{status}", staffChatEnabled ? "§aON" : "§cOFF");
-            sender.sendMessage(msg);
-            return true;
-        }
-
-        return false;
+    public String getNoPermissionMessage() {
+        return getConfig()
+                .getString("messages.noPermission", "§cYou don't have permission!")
+                .replace("{prefix}", getPrefix());
     }
 
-    @EventHandler
-    public void onChat(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
+    // -----------------------------
+    // Modular Methods
+    // -----------------------------
+    private void registerCommands() {
+        getCommand("togglevanish").setExecutor(new ToggleVanishCommand(this));
+        getCommand("togglestaffchat").setExecutor(new ToggleStaffChatCommand(this));
+    }
 
-        if (staffChatEnabled && player.hasPermission("stafffeatures.staffchat")) {
-            event.setCancelled(true); // cancel normal chat
+    private void registerListeners() {
+        getServer().getPluginManager().registerEvents(new StaffChatListener(this), this);
+    }
 
-            String prefix = getConfig().getString("messages.prefix");
-            String format = "§b[StaffChat] §e" + player.getName() + ": §f" + event.getMessage();
+    private void startActionBarUpdater() {
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            String format = getConfig().getString("messages.actionBarFormat", "Vanish: {vanish} | StaffChat: {staffchat}");
+            for (var player : Bukkit.getOnlinePlayers()) {
+                if (player.hasPermission("stafffeatures.use")) {
+                    String message = format
+                            .replace("{vanish}", vanished ? "§aON" : "§cOFF")
+                            .replace("{staffchat}", staffChatEnabled ? "§aON" : "§cOFF");
 
-            for (Player online : Bukkit.getOnlinePlayers()) {
-                if (online.hasPermission("stafffeatures.staffchat")) {
-                    online.sendMessage(prefix + " " + format);
+                    player.sendActionBar(Component.text(message));
                 }
             }
-        }
+        }, 0L, 40L); // 2 seconds interval (40 ticks)
     }
 }
