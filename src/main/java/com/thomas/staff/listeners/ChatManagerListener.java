@@ -22,7 +22,8 @@ public class ChatManagerListener implements Listener {
         Player player = event.getPlayer();
         if (chatManager.isChatMuted() && !player.hasPermission("stafffeatures.chat.bypass")) {
             event.setCancelled(true);
-            player.sendMessage("§cChat is currently muted!");
+            String mutedMessage = plugin.getConfig().getString("messages.chatMuted", "Chat is currently muted!");
+            player.sendMessage("§c" + mutedMessage);
         }
     }
 }

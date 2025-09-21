@@ -5,3 +5,10 @@ messages:
   actionBarFormat: "§eVanished: {vanish} §7| §bStaff Chat: {staffchat}"
   noPermission: "§c{prefix} You don't have permission!"
   prefix: "§e[Pixel Burma]"
+  chatMuted: "Chat is currently muted!"
+  chatCleared: "Chat has been cleared!"
+  chatToggle: "Chat has been {status}!"
+  status:
+    muted: "§cmuted"
+    unmuted: "§aunmuted"
+  staffChatFormat: "§b[StaffChat] §e{player}: §f{message}"

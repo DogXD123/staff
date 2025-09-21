@@ -19,8 +19,10 @@ public class ChatManager {
 
     public void toggleChatMute() {
         chatMuted = !chatMuted;
-        String status = chatMuted ? "§cmuted" : "§aunmuted";
-        Bukkit.broadcastMessage(plugin.getPrefix() + " Chat has been " + status + "!");
+        String statusKey = chatMuted ? "messages.status.muted" : "messages.status.unmuted";
+        String status = plugin.getConfig().getString(statusKey, chatMuted ? "§cmuted" : "§aunmuted");
+
+        Bukkit.broadcastMessage(plugin.getPrefix() + " " + plugin.getConfig().getString("messages.chatToggle", "Chat has been {status}!").replace("{status}", status));
     }
 
     public void clearChat() {
@@ -29,7 +31,7 @@ public class ChatManager {
                 player.sendMessage("");
             }
         }
-        Bukkit.broadcastMessage(plugin.getPrefix() + " Chat has been cleared!");
+        Bukkit.broadcastMessage(plugin.getPrefix() + " " + plugin.getConfig().getString("messages.chatCleared", "Chat has been cleared!"));
     }
 
     public StaffFeaturesPlugin getPlugin() {
