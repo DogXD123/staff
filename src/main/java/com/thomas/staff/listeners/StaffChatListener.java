@@ -22,8 +22,20 @@ public class StaffChatListener implements Listener {
         if (plugin.isStaffChatEnabled() && player.hasPermission("stafffeatures.staffchat")) {
             event.setCancelled(true);
 
-            String format = plugin.getConfig().getString("messages.staffChatFormat", "[StaffChat] {player}: {message}");
-            format = format.replace("{player}", player.getName())
+            // Grab format from config
+            String format = plugin.getConfig().getString(
+                    "messages.staffChatFormat",
+                    "[StaffChat] {prefix}{player} >> {message}"
+            );
+
+            // TODO: Integrate with Vault
+            String prefix = ""; 
+            if (player.getDisplayName() != null) {
+                prefix = player.getDisplayName().replace(player.getName(), ""); // crude way
+            }
+
+            format = format.replace("{prefix}", prefix)
+                           .replace("{player}", player.getName())
                            .replace("{message}", event.getMessage());
 
             for (Player online : Bukkit.getOnlinePlayers()) {
