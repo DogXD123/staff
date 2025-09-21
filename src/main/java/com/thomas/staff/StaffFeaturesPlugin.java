@@ -5,18 +5,22 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class StaffFeaturesPlugin extends JavaPlugin {
+public class StaffFeaturesPlugin extends JavaPlugin implements Listener {
 
     private boolean vanished = false;
-    private boolean staffChat = true;
-    private boolean someFeature = false;
+    private boolean staffChatEnabled = true;
 
     @Override
     public void onEnable() {
         getLogger().info("StaffFeatures enabled!");
         saveDefaultConfig();
+
+        Bukkit.getPluginManager().registerEvents(this, this);
 
         // Start repeating task to update action bars every 2 seconds
         Bukkit.getScheduler().runTaskTimer(this, () -> {
@@ -25,8 +29,7 @@ public class StaffFeaturesPlugin extends JavaPlugin {
                     String format = getConfig().getString("messages.actionBarFormat");
                     String message = format
                             .replace("{vanish}", vanished ? "§aON" : "§cOFF")
-                            .replace("{staffchat}", staffChat ? "§aON" : "§cOFF")
-                            .replace("{feature}", someFeature ? "§aON" : "§cOFF");
+                            .replace("{staffchat}", staffChatEnabled ? "§aON" : "§cOFF");
 
                     player.sendActionBar(Component.text(message));
                 }
@@ -65,25 +68,31 @@ public class StaffFeaturesPlugin extends JavaPlugin {
                 sendNoPermission(sender);
                 return true;
             }
-            staffChat = !staffChat;
+            staffChatEnabled = !staffChatEnabled;
             String msg = getConfig().getString("messages.helpMessage.togglestaffchat")
-                    .replace("{status}", staffChat ? "§aON" : "§cOFF");
-            sender.sendMessage(msg);
-            return true;
-        }
-
-        if (command.getName().equalsIgnoreCase("togglefeature")) {
-            if (!sender.hasPermission("stafffeatures.toggle.feature")) {
-                sendNoPermission(sender);
-                return true;
-            }
-            someFeature = !someFeature;
-            String msg = getConfig().getString("messages.helpMessage.togglefeature")
-                    .replace("{status}", someFeature ? "§aON" : "§cOFF");
+                    .replace("{status}", staffChatEnabled ? "§aON" : "§cOFF");
             sender.sendMessage(msg);
             return true;
         }
 
         return false;
+    }
+
+    @EventHandler
+    public void onChat(AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+
+        if (staffChatEnabled && player.hasPermission("stafffeatures.staffchat")) {
+            event.setCancelled(true); // cancel normal chat
+
+            String prefix = getConfig().getString("messages.prefix");
+            String format = "§b[StaffChat] §e" + player.getName() + ": §f" + event.getMessage();
+
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                if (online.hasPermission("stafffeatures.staffchat")) {
+                    online.sendMessage(prefix + " " + format);
+                }
+            }
+        }
     }
 }
